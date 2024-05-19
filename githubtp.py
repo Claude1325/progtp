@@ -110,3 +110,87 @@ def haversine(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     d = R * c
     return d
+
+# Fonction pour lire les données du fichier CSV et les afficher à l'écran
+def lire_et_afficher_csv():
+    print("Lecture des données du fichier data.csv...")
+    with open('data.csv', 'r', newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            print(row)
+    input("Appuyez sur Entrée pour revenir au menu.")
+
+
+# Fonction pour sauvegarder les données dans un fichier JSON
+def sauvegarder_dans_json():
+    print("Sauvegarde des données dans un fichier JSON...")
+    with open('donnees.json', 'w') as jsonfile:
+        # Lire les données du fichier CSV
+        data = []
+        with open('data.csv', 'r', newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                data.append(row)
+        # Écrire les données dans un fichier JSON
+        json.dump(data, jsonfile)
+    print("Les données ont été sauvegardées dans le fichier donnees.json.")
+
+
+# Fonction pour lire les données du fichier JSON, les calculs dans le fichier distances.csv
+def lire_et_traiter_json():
+    print("Lecture des données du fichier JSON...")
+    with open('DATA.json', 'r') as jsonfile:
+        data = json.load(jsonfile)
+
+    # Calcul des distances et recherche de la distance minimale
+    distances = []
+    for i in range(len(data)):
+        for j in range(i + 1, len(data)):
+            ville1 = data[i]
+            ville2 = data[j]
+            distance = haversine(float(ville1['latitude']), float(ville1['longitude']), float(ville2['latitude']),
+                                 float(ville2['longitude']))
+            distances.append({'ville1': ville1['ville'], 'ville2': ville2['ville'], 'distance': distance})
+
+    min_distance = min(distances, key=lambda x: x['distance'])
+
+    # Afficher les informations sur la distance minimale
+    print(
+        f"Distance minimale en kilomètres entre 2 villes : Ville 1 : {min_distance['ville1']}, Ville 2 : {min_distance['ville2']}, Distance en kilomètres : {min_distance['distance']}")
+
+    # Sauvegarde dans le fichier CSV
+    with open('distances.csv', 'w', newline='') as csvfile:
+        fieldnames = ['ville1', 'ville2', 'distance']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(distances)
+    print("Les calculs de distances ont été sauvegardés dans le fichier distances.csv.")
+
+
+# Fonction principale pour afficher le menu et gérer les options
+def afficher_menu():
+    while True:
+        print("\nMenu :")
+        print("1- Lire les données du fichier csv, créer les objets et afficher les données.")
+        print("2- Sauvegarder les données dans un fichier .json.")
+        print(
+            "3- Lire les données du fichier .json, déterminer et afficher les données associées à la distance minimale entre deux villes et sauvegarder les calculs dans distances.csv.")
+        print("Entrez un numéro pour choisir une option ou appuyez sur 'q' pour quitter :")
+
+        choix = input()
+
+        if choix == '1':
+            lire_et_afficher_csv()
+        elif choix == '2':
+            sauvegarder_dans_json()
+        elif choix == '3':
+            lire_et_traiter_json()
+        elif choix.lower() == 'q':
+            print("Programme terminé.")
+            break
+        else:
+            print("Choix invalide. Veuillez entrer une option valide.")
+
+
+# Exécution du programme
+afficher_menu()
